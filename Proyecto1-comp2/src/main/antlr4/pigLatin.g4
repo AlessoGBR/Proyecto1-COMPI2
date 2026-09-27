@@ -124,8 +124,6 @@ declaracionLocal
     | declaracionArreglo
     ;
 
-// El orden importa: 'nombre <<' es una lectura y 'x++' un incremento, no una
-// llamada a metodo; por eso esas alternativas van antes.
 instruccion
     : declaracionVariable
     | declaracionArreglo
