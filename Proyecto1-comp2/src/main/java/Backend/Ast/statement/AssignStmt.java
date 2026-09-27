@@ -6,7 +6,7 @@ import Backend.Ast.expression.Expression;
 public class AssignStmt extends Statement {
     private final Expression target;
     private final AssignOp operator;
-    private final Expression value;
+    private Expression value;
 
     public AssignStmt(Expression target, AssignOp operator, Expression value, int line, int column) {
         super(line, column);
@@ -29,6 +29,10 @@ public class AssignStmt extends Statement {
 
     public Expression getValue() {
         return value;
+    }
+
+    public void setValue(Expression value) {
+        this.value = value;
     }
 
     @Override

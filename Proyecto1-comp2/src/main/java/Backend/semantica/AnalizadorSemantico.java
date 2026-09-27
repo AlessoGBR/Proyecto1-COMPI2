@@ -135,7 +135,7 @@ public class AnalizadorSemantico implements AstVisitor<Type, Ambito> {
                 simP.setEsPorReferencia(p.isByReference());
                 simFunc.agregarParametro(simP);
             }
-            if (!global.insertarDefinicion(simFunc)) {
+            if (!global.insertarFuncion(simFunc)) {
                 gestorErrores.agregarSemantico("LA FUNCION: " + func.getName() + " YA FUE DECLARADA EN EL AMBITO GLOBAL", func.getLine(), func.getColumn());
             }
             simFunc.setEtiquetaC3D("func_" + func.getName());
@@ -430,6 +430,7 @@ public class AnalizadorSemantico implements AstVisitor<Type, Ambito> {
     @Override
     public Type visitAssignStmt(AssignStmt node, Ambito context) {
         Type targetType = node.getTarget().accept(this, context);
+        node.setValue(adaptarLiteral(node.getValue(), targetType));
         Type valType = node.getValue().accept(this, context);
 
         if (!TablaCompatibilidad.esAsignableCompuesta(targetType, node.getOperator(), valType)) {
@@ -735,7 +736,7 @@ public class AnalizadorSemantico implements AstVisitor<Type, Ambito> {
             return Type.ERROR;
         }
 
-        if (indices.size() != targetType.getDimensions()) {
+        if (!targetType.tieneDimensionesLibres() && indices.size() != targetType.getDimensions()) {
             gestorErrores.agregarSemantico("EL ARREGLO ES DE " + targetType.getDimensions()
                     + " DIMENSION(ES) Y SE ACCEDIO CON " + indices.size() + " INDICE(S), SE DEBEN INDICAR TODOS",
                     node.getLine(), node.getColumn());
@@ -777,8 +778,8 @@ public class AnalizadorSemantico implements AstVisitor<Type, Ambito> {
             }
             descripcion = targetType.getTypeName() + "." + node.getFunctionName();
         } else {
-            Simbolo funcion = context.buscar(node.getFunctionName());
-            if (funcion != null && (funcion.getRol() == RolSimbolo.FUNCION || funcion.getRol() == RolSimbolo.METODO)) {
+            Simbolo funcion = context.buscarFuncion(node.getFunctionName());
+            if (funcion != null) {
                 candidatos.add(funcion);
             } else if (claseActual != null) {
                 candidatos = claseActual.buscarMetodos(node.getFunctionName());
@@ -891,14 +892,21 @@ public class AnalizadorSemantico implements AstVisitor<Type, Ambito> {
     public Type visitNewStructExpr(NewStructExpr node, Ambito context) {
         String structName = node.getStructName();
 
+        Simbolo structDef = structName != null
+                ? tablaSimbolos.getAmbitoGlobal().buscarEnActual(structName)
+                : null;
+
+        if (structDef != null && structDef.getRol() == RolSimbolo.ESTRUCTURA) {
+            List<Simbolo> campos = new ArrayList<>(structDef.getMiembros().values());
+            for (int i = 0; i < Math.min(campos.size(), node.getValues().size()); i++) {
+                node.setValue(i, adaptarLiteral(node.getValues().get(i), campos.get(i).getTipo()));
+            }
+        }
+
         List<Type> tiposValores = new ArrayList<>();
         for (Expression val : node.getValues()) {
             tiposValores.add(val.accept(this, context));
         }
-
-        Simbolo structDef = structName != null
-                ? tablaSimbolos.getAmbitoGlobal().buscarEnActual(structName)
-                : null;
 
         if (structName != null && structDef == null) {
             gestorErrores.agregarSemantico("LA ESTRUCTURA: " + structName + " NO ESTA DECLARADA "
@@ -929,19 +937,44 @@ public class AnalizadorSemantico implements AstVisitor<Type, Ambito> {
             Type tipoValor = tiposValores.get(i);
             Expression valor = node.getValues().get(i);
 
-            boolean esLiteralAnidado = valor instanceof NewStructExpr || valor instanceof NewArrayExpr;
-            if (esLiteralAnidado && tipoCampo != null
-                    && (tipoCampo.getCategory() == Type.TypeCategory.STRUCT
-                    || tipoCampo.getCategory() == Type.TypeCategory.ARRAY)) {
-                continue;
-            }
-
             if (!TablaCompatibilidad.esAsignable(tipoCampo, tipoValor)) {
                 gestorErrores.agregarSemantico("EL CAMPO: " + campos.get(i).getIdentificador()
                         + " DE: " + structDef.getIdentificador() + " ES DE TIPO " + tipoCampo
                         + " Y SE ASIGNO " + tipoValor, valor.getLine(), valor.getColumn());
             }
         }
+    }
+
+    private Expression adaptarLiteral(Expression valor, Type esperado) {
+        if (esperado == null) {
+            return valor;
+        }
+        if (valor instanceof NewStructExpr literal && literal.getStructName() == null) {
+            if (esperado.getCategory() == Type.TypeCategory.STRUCT) {
+                return new NewStructExpr(esperado.getTypeName(), literal.getValues(), literal.getLine(), literal.getColumn());
+            }
+            if (esperado.getCategory() == Type.TypeCategory.ARRAY && esperado.getBaseType() != null) {
+                return literalComoArreglo(literal.getValues(), esperado.getBaseType(),
+                        Math.max(1, esperado.getDimensions()), literal.getLine(), literal.getColumn());
+            }
+        }
+        if (valor instanceof NewArrayExpr arreglo && !arreglo.isExplicitAllocation()
+                && arreglo.getElementType() == null && esperado.getCategory() == Type.TypeCategory.STRUCT) {
+            return new NewStructExpr(esperado.getTypeName(), arreglo.getInitialValues(), arreglo.getLine(), arreglo.getColumn());
+        }
+        return valor;
+    }
+
+    private NewArrayExpr literalComoArreglo(List<Expression> valores, Type tipoElemento, int dimensiones, int linea, int columna) {
+        List<Expression> elementos = new ArrayList<>();
+        for (Expression valor : valores) {
+            if (dimensiones > 1 && valor instanceof NewStructExpr fila && fila.getStructName() == null) {
+                elementos.add(literalComoArreglo(fila.getValues(), tipoElemento, dimensiones - 1, fila.getLine(), fila.getColumn()));
+            } else {
+                elementos.add(adaptarLiteral(valor, tipoElemento));
+            }
+        }
+        return new NewArrayExpr(tipoElemento, List.of(), elementos, linea, columna);
     }
 
     @Override

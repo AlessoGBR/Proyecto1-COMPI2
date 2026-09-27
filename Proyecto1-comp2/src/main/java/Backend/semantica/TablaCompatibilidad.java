@@ -162,7 +162,9 @@ public class TablaCompatibilidad {
         }
 
         if (destino.getCategory() == Type.TypeCategory.ARRAY && origen.getCategory() == Type.TypeCategory.ARRAY) {
-            return destino.getDimensions() == origen.getDimensions() &&
+            boolean mismasDimensiones = destino.getDimensions() == origen.getDimensions()
+                    || destino.tieneDimensionesLibres() || origen.tieneDimensionesLibres();
+            return mismasDimensiones &&
                     (destino.getBaseType() == null || esAsignable(destino.getBaseType(), origen.getBaseType()));
         }
 

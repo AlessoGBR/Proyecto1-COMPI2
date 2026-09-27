@@ -150,7 +150,9 @@ public class ModelosTablas {
             if (ambito == null) return;
             String nombreAmbito = ambito.getNombre();
 
-            for (Simbolo s : ambito.getTabla().values()) {
+            List<Simbolo> simbolos = new ArrayList<>(ambito.getTabla().values());
+            simbolos.addAll(ambito.getFunciones().values());
+            for (Simbolo s : simbolos) {
                 String tipoStr = s.getTipo() != null ? s.getTipo().getTypeName() : "-";
                 String rolStr = s.getRol() != null ? s.getRol().name() : "-";
                 String offsetStr = String.valueOf(s.getDireccionRelativa());

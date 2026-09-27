@@ -41,6 +41,10 @@ public class Type {
         return new Type(TypeCategory.ARRAY, baseType.getTypeName() + "[]".repeat(dimensions), baseType, dimensions);
     }
 
+    public static Type crearArregloSinDimensiones(Type baseType) {
+        return new Type(TypeCategory.ARRAY, baseType.getTypeName() + "[]", baseType, 0);
+    }
+
     public static Type createCustomType(String name, boolean isClass) {
         return new Type(isClass ? TypeCategory.CLASS : TypeCategory.STRUCT, name, null, 0);
     }
@@ -68,6 +72,10 @@ public class Type {
 
     public int getDimensions() {
         return dimensions;
+    }
+
+    public boolean tieneDimensionesLibres() {
+        return category == TypeCategory.ARRAY && dimensions == 0;
     }
 
     public boolean isNumeric() {

@@ -76,7 +76,7 @@ public class YAstVisitor extends YBaseVisitor<Node> {
                 String pName = pCtx.ID().getText();
                 boolean isByRef = false;
                 if (pCtx.LBRACKET() != null) {
-                    pType = Type.createArrayType(pType, 1);
+                    pType = Type.crearArregloSinDimensiones(pType);
                     isByRef = true;
                 } else if (pCtx.LBRACE() != null) {
                     isByRef = true;

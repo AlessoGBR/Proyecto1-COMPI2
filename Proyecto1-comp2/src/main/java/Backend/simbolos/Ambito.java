@@ -12,6 +12,7 @@ public class Ambito {
     private final String nombre;
     private final Ambito padre;
     private final Map<String, Simbolo> tabla;
+    private final Map<String, Simbolo> funciones;
     private final List<Ambito> hijos;
     private final boolean esMarco;
     private int tamanioMarco;
@@ -20,6 +21,7 @@ public class Ambito {
         this.nombre = nombre;
         this.padre = padre;
         this.tabla = new LinkedHashMap<>();
+        this.funciones = new LinkedHashMap<>();
         this.hijos = new ArrayList<>();
         this.esMarco = esMarco || padre == null;
         this.tamanioMarco = offsetInicial;
@@ -105,8 +107,33 @@ public class Ambito {
         return tabla.get(identificador);
     }
 
+    public boolean insertarFuncion(Simbolo simbolo) {
+        if (simbolo == null || funciones.containsKey(simbolo.getIdentificador())) {
+            return false;
+        }
+        simbolo.setNombreAmbito(this.nombre);
+        simbolo.setEsGlobal(getMarco().esGlobal());
+        funciones.put(simbolo.getIdentificador(), simbolo);
+        return true;
+    }
+
+    public Simbolo buscarFuncion(String identificador) {
+        Simbolo encontrada = funciones.get(identificador);
+        if (encontrada != null) {
+            return encontrada;
+        }
+        if (padre != null) {
+            return padre.buscarFuncion(identificador);
+        }
+        return null;
+    }
+
     public Map<String, Simbolo> getTabla() {
         return tabla;
+    }
+
+    public Map<String, Simbolo> getFunciones() {
+        return funciones;
     }
 
     public List<Ambito> getHijos() {
@@ -123,6 +150,7 @@ public class Ambito {
 
     public List<Simbolo> obtenerTodosLosSimbolos() {
         List<Simbolo> lista = new ArrayList<>(tabla.values());
+        lista.addAll(funciones.values());
         for (Ambito hijo : hijos) {
             lista.addAll(hijo.obtenerTodosLosSimbolos());
         }
