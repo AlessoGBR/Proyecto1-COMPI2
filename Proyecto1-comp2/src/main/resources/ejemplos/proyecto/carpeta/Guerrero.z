@@ -1,0 +1,21 @@
+public class Guerrero {
+    String nombre;
+    int nivel;
+
+    public Guerrero(String nombreParametro, int nivelParametro) {
+        nombre = nombreParametro;
+        nivel = nivelParametro;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getNivel() {
+        return nivel;
+    }
+
+    public void subirNivel() {
+        nivel = nivel + 1;
+    }
+}

@@ -1,0 +1,33 @@
+public class Recursivo {
+    int base;
+
+    public Recursivo(int valor) {
+        base = valor;
+    }
+
+    public int factorial(int n) {
+        if (n <= 1) {
+            return 1;
+        }
+        return n * factorial(n - 1);
+    }
+
+    public int sumarHasta(int n) {
+        if (n == 0) { return 0; }
+        return n + sumarHasta(n - 1);
+    }
+
+    public int conBase(int n) {
+        return factorial(n) + base;
+    }
+
+    public void main() {
+        Recursivo r = new Recursivo(100);
+        println("factorial(5) = " + r.factorial(5));
+        println("sumarHasta(10) = " + r.sumarHasta(10));
+        println("conBase(4) = " + r.conBase(4));
+        char inicial = 'A';
+        int codigo = inicial;
+        println("codigo de A = " + codigo);
+    }
+}

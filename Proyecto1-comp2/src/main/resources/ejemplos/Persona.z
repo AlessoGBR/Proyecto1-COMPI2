@@ -1,0 +1,103 @@
+public class Persona {
+    String nombre;
+    int edad;
+
+    public Persona(String nombreParametro, int edadParametro) {
+        nombre = nombreParametro;
+        edad = edadParametro;
+    }
+
+    public Persona() {
+        nombre = "Sin nombre";
+        edad = 0;
+    }
+
+    public void saludar() {
+        println("Hola! Me llamo " + nombre + " y tengo " + edad + " anios.");
+    }
+
+    public int calcularAnioNacimiento(int anioActual) {
+        return anioActual - edad;
+    }
+
+    public int obtenerEdad() {
+        return edad;
+    }
+
+    // Sobrecarga de metodos
+    public int duplicar(int valor) {
+        return valor * 2;
+    }
+
+    public double duplicar(double valor) {
+        return valor * 2.0;
+    }
+
+    public void main() {
+        Persona p1 = new Persona("Carlos", 25);
+        Persona p2 = new Persona("Ana", 30);
+        Persona anonimo = new Persona();
+
+        p1.saludar();
+        p2.saludar();
+        anonimo.saludar();
+
+        int sumaEdades = p1.edad + p2.edad;
+        println("Suma de edades: " + sumaEdades);
+
+        String clasificacion = (p1.edad >= 18) ? "Adulto" : "Menor";
+        println("Clasificacion de p1: " + clasificacion);
+
+        int anioNac = 2026 - p1.obtenerEdad();
+        println("Anio de nacimiento de p1: " + anioNac);
+        println("Anio via metodo: " + p1.calcularAnioNacimiento(2026));
+
+        println("duplicar(21) = " + p1.duplicar(21));
+        println("duplicar(2.5) = " + p1.duplicar(2.5));
+
+        p1.edad = 40;
+        println("Nueva edad de p1: " + p1.edad);
+        p1.saludar();
+
+        int[] numeros = {10, 20, 30, 40, 50};
+        numeros[2] = numeros[0] * 3;
+        println("numeros[2] = " + numeros[2]);
+
+        int x = 5;
+        x += 3;
+        x -= 2;
+        x *= 2;
+        println("x = " + x);
+
+        int a = 10;
+        int b = 3;
+        println("division entera: " + (a / b));
+        println("modulo: " + (a % b));
+
+        for (int i = 0; i < 5; i++) {
+            if (i == 2) { continue; }
+            if (i == 4) { break; }
+            println("iteracion " + i);
+        }
+
+        int contador = 0;
+        do {
+            contador++;
+        } while (contador < 3);
+        println("contador do-while: " + contador);
+
+        switch (b) {
+            case 1:
+                println("uno");
+                break;
+            case 3:
+                println("tres (sin break, cae en default)");
+            default:
+                println("default alcanzado");
+                break;
+        }
+
+        boolean logico = (a > 5 && b < 10) || !(a == 10);
+        println("logico: " + logico);
+    }
+}
